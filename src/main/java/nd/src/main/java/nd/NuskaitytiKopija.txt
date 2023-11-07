@@ -1,0 +1,637 @@
+package nd;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+// import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonObjectFormatVisitor;
+// import com.fasterxml.jackson.databind.node.ObjectNode;
+// import com.fasterxml.jackson.databind.util.JSONPObject;
+import java.text.SimpleDateFormat;
+import java.text.ParseException;
+import java.util.Date;
+import com.fasterxml.jackson.databind.JsonNode;
+import java.util.Scanner;
+import java.io.File;
+import java.io.IOException;
+import java.util.LinkedList;
+import java.util.Iterator;
+
+public class Nuskaityti {
+
+    public static LinkedList<Task> taskList = new LinkedList<>();
+    public static LinkedList<Task> getTaskList() {
+        return taskList;
+    }
+    private static LinkedList <Task> queue = new LinkedList<Task>();
+    public static void main(String[] args) throws ParseException {
+        
+        
+            readTasks();
+            addTask();
+            //deleteTask();
+            //findTask();
+            //wipeList();
+            //changeTask();   
+            //printTasks(taskList);
+            writeTasks();
+        
+    }
+
+    public static void writeTasks(){
+        ArrayNode tasksArray = JsonNodeFactory.instance.arrayNode();
+            for(Task task : taskList){
+                ObjectNode taskNode = JsonNodeFactory.instance.objectNode();
+                taskNode.put("taskTitle", task.getTaskTitle());
+                taskNode.put("subject", task.getSubject());
+                taskNode.put("dueDate", task.getdeadline());
+                taskNode.put("description", task.getDescription());
+                taskNode.put("additionalInfo", task.getAdditionalInfo());
+                tasksArray.add(taskNode);
+            }
+            
+            ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            File file = new File("src\\main\\java\\nd\\tasks.json");
+            objectMapper.writerWithDefaultPrettyPrinter().writeValue(file, tasksArray);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void deleteTaskInFile(){
+        Scanner input = new Scanner(System.in);
+        int position = input.nextInt();
+        
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            File file = new File("src\\main\\java\\nd\\tasks.json");
+    
+            ArrayNode tasksArray = objectMapper.readValue(file, ArrayNode.class);
+    
+            if(position >= 0 && tasksArray.size() > position){
+                tasksArray.remove(position);
+                objectMapper.writerWithDefaultPrettyPrinter().writeValue(file, tasksArray);
+            }
+            
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        input.close();
+    }
+
+    public static void deleteTaskInFileTitle(){
+        Scanner input = new Scanner(System.in);
+        String title = input.nextLine();
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            File file = new File("src\\main\\java\\nd\\tasks.json");
+    
+            ArrayNode tasksArray = objectMapper.readValue(file, ArrayNode.class);
+    
+            for (int i = 0; i < tasksArray.size(); i++) {
+                ObjectNode taskNode = (ObjectNode) tasksArray.get(i);
+                if (taskNode.get("taskTitle").asText().equals(title)) {
+                    tasksArray.remove(i);
+                    break; 
+                }
+            }
+    
+            objectMapper.writerWithDefaultPrettyPrinter().writeValue(file, tasksArray);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        input.close();
+    }
+
+    public static void readTasks(){
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode jsonNode = objectMapper.readTree(new File("src\\main\\java\\nd\\tasks.json"));
+
+            if (jsonNode.isArray() && jsonNode != null) {
+                for (JsonNode taskNode : jsonNode) {
+                    Task task = new Task(
+                            taskNode.get("taskTitle").asText(),
+                            taskNode.get("subject").asText(),
+                            taskNode.get("dueDate").asText(),
+                            taskNode.get("description").asText(),
+                            taskNode.get("additionalInfo").asText()
+                    );
+                    taskList.add(task);
+                }
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void printTasks(LinkedList <Task> list){
+        for (Task task : list) {
+            System.out.println("Pavadinimas: " + task.getTaskTitle());
+            System.out.println("Dalykas: " + task.getSubject());
+            System.out.println("Termino pabaiga: " + task.getdeadline());
+            System.out.println("Aprasymas: " + task.getDescription());
+            System.out.println("Papildoma informacija: " + task.getAdditionalInfo());
+            System.out.println();
+        }
+    }
+
+    public static void addTask() throws ParseException{
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-mm-dd");
+        
+        //USER INPUT
+        
+        Scanner input = new Scanner(System.in);
+
+        System.out.println("Iveskite vieta, i kuria noresite prideti norima uzduoti");
+        int pos = input.nextInt();
+        input.nextLine();
+
+        System.out.println("Iveskite pavadinima");
+        String title = input.nextLine();
+
+        System.out.println("Iveskite dalyka");
+        String subject = input.nextLine();
+
+        System.out.println("Iveskite deadline");
+        String deadline = input.nextLine();
+
+        System.out.println("Iveskite aprasyma");
+        String description = input.nextLine();
+
+        System.out.println("Iveskite papildoma info");
+        String additional = input.nextLine();
+        
+        //IDEJIMAS I LINKED LISTA
+
+        Task task = new Task(
+            title,
+            subject,
+            deadline,
+            description,
+            additional
+            );
+        Date date1 = simpleDateFormat.parse(deadline); //deadline
+        Date date2 = simpleDateFormat.parse("2023-11-08"); //siandien
+
+        if(date2.before(date1)){ //jeigu deadline pvz 2023-11-01, neleisti prideti
+            taskList.add(pos, task);
+            System.out.println("Uzduotis prideta sekmingai!");
+        } else {
+            System.out.println("Uzduoties terminas jau pasibaiges! Uzduotis neprideta.");
+        }
+        
+        input.close();
+
+    }
+
+    public static void deleteTask(){
+        Scanner input = new Scanner(System.in);
+
+        System.out.println("Pasirinkite, pagal ka noresite panaikinti uzduoti. 1) Pagal pozcija, 2) Pagal pavadinima.");
+        int choose = input.nextInt();
+        input.nextLine();
+
+        if(choose == 1){
+            System.out.println("Iveskite pozicija");
+            int pos = input.nextInt();
+            input.nextLine();
+
+            taskList.remove(pos);
+            System.out.println("Uzduotis sekmingai pasalinta is " + pos + " pozicijos");
+
+        } else if(choose == 2){
+            System.out.println("Iveskite uzduoties pavadinima");
+            String title = input.nextLine();
+
+            Iterator <Task> iterator = taskList.iterator();
+
+            while (iterator.hasNext()) {
+                Task task = iterator.next();
+                
+                if (title.equals(task.getTaskTitle())) {
+                    iterator.remove(); 
+                    System.out.println("\nUzduotis " + title + " sekmingai pasalinta!\n");
+                    break;
+                } else {
+                    System.out.println("\nBlogai ivesta uzduotis" + title + "\n");
+                }
+            }
+        } else {
+            System.out.println("Blogai ivestas pasirinkimas");
+        }
+
+        input.close();
+    }
+
+    public static void findTask(){
+        //Iterator <Task> iterator = taskList.iterator();
+        Scanner input = new Scanner(System.in);
+
+        while(true){
+            System.out.println("Nurodykite, pagal ka norite ieskoti uzduoties. 1) Pagal termina, 2) Pagal pavadinima. Norint iseiti is ciklo spauskite Q");
+            String choice = input.nextLine();
+            //input.nextLine();
+
+            if(choice.equals("Q")){
+                break;
+            }
+            int choose = Integer.parseInt(choice);
+            if(choose == 1){
+                System.out.println("Iveskite termina");
+                String deadline = input.nextLine();
+
+                Iterator <Task> iterator = taskList.iterator();
+
+                while(iterator.hasNext()){
+                    Task task = iterator.next();
+                    if(deadline.equals(task.getdeadline())){
+                    Task temp = new Task(
+                            task.getTaskTitle(),
+                            task.getSubject(),
+                            task.getdeadline(),
+                            task.getDescription(),
+                            task.getAdditionalInfo()
+                            );
+                    queue.add(temp);
+                    } 
+                }
+                
+            } else if(choose == 2){
+                System.out.println("Iveskite pavadinima");
+                String title = input.nextLine();
+
+                Iterator <Task> iterator = taskList.iterator();
+
+                while(iterator.hasNext()){
+                    Task task = iterator.next();
+                    if(title.equals(task.getTaskTitle())){
+                    Task temp = new Task(
+                            task.getTaskTitle(),
+                            task.getSubject(),
+                            task.getdeadline(),
+                            task.getDescription(),
+                            task.getAdditionalInfo()
+                            );
+                    queue.add(temp);
+                } 
+                }
+                
+            }
+            
+        }
+        System.out.println("Surastos uzduotys: ");
+        
+        printTasks(queue);
+        
+        //input.close();
+    }
+
+    public static void wipeList(){
+        taskList.removeAll(taskList);
+    }
+
+    public static void changeTask(){
+        Scanner input = new Scanner(System.in);
+
+        findTask();
+
+        System.out.println("Iveskite uzduoties pavadinima, kuria jus noresite atnaujinti");
+        String taskToUpdateTitle = input.nextLine();
+        //input.nextLine();
+
+        Task taskInQueue = null;
+        for (Task task : queue) {
+            if (task.getTaskTitle().equals(taskToUpdateTitle)) {
+                taskInQueue = task;
+                break;
+            }
+        }
+
+        Task taskInList = null;
+        for (Task task : taskList) {
+            if (task.getTaskTitle().equals(taskToUpdateTitle)) {
+                taskInList = task;
+                break;
+            }
+        }
+
+        System.out.println("Naujas dalykas: ");
+        String newSubject = input.nextLine();
+        System.out.println("Naujas deadline: ");
+        String newDeadline = input.nextLine();
+        System.out.println("Naujas aprasymas: ");   
+        String newDescription = input.nextLine();
+        System.out.println("Nauja papildoma info: ");
+        String newAdditionalInfo = input.nextLine();
+
+        if (taskInQueue != null && taskInList != null) {
+            taskInQueue.setSubject(newSubject);
+            taskInQueue.setdeadline(newDeadline);
+            taskInQueue.setDescription(newDescription);
+            taskInQueue.setAdditionalInfo(newAdditionalInfo);
+
+            taskInList.setSubject(newSubject);
+            taskInList.setdeadline(newDeadline);
+            taskInList.setDescription(newDescription);
+            taskInList.setAdditionalInfo(newAdditionalInfo);
+        } else {
+            System.out.println("Uzduotis nerasta.");
+        }
+        printTasks(taskList);
+        input.close();
+    }
+    
+    public static void sortTasksByDeadline(){
+        
+    }
+     
+}   
+
+
+
+package nd;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.text.ParseException;
+import java.util.Iterator;
+import java.util.Scanner;
+
+public class UI extends JFrame {
+    public enum ButtonState {
+        NONE, ADD_TASK, DELETE_TASK
+    }
+    private ButtonState buttonState = ButtonState.NONE;
+
+    private static JTextField position;
+    private static JTextField taskTitleField;
+    private static JTextField subjectField;
+    private static JTextField deadlineField;
+    private static JTextField descriptionField;
+    private static JTextField additionalInfoField;
+    private static boolean addtask = false, deletebypos = false, deletebytitle = false;
+    private JPanel cardPanel;
+    private CardLayout cardLayout;
+    JPanel addTaskPanel = new JPanel();
+    JPanel deleteTaskPanel = new JPanel();
+    JPanel deleteTaskByTitlePanel = new JPanel();
+    JPanel printTaskPanel = new JPanel();
+
+    public UI() {
+        setTitle("Studento uzduociu tvarkytuvas");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(400, 300);
+
+        cardLayout = new CardLayout();
+        cardPanel = new JPanel(cardLayout);
+
+        Nuskaityti.readTasks();
+        createMainScreen();
+        addTaskUI();
+        printTasksUI();
+        deleteByPosUI();
+        deleteByTitleUI();
+        goBackButton();
+
+        add(cardPanel);
+
+        setVisible(true);
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                new UI();
+            }
+        });
+    }
+
+    private void createMainScreen() {
+        JPanel mainPanel = new JPanel(new BorderLayout());
+    
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER)); // Use FlowLayout
+    
+        JButton addTaskButton = new JButton("Pridėti užduotį");
+        JButton deleteTaskByPosButton = new JButton("Ištrinti užduotį pagal poziciją");
+        JButton deleteTaskByTitleButton = new JButton("Ištrinti užduotį pagal pavadinimą");
+        JButton showTaskButton = new JButton("Parodyti visas užduotis");
+        JButton findTaskByDeadlineButton = new JButton("Rasti užduotį pagal terminą");
+        JButton findTaskByTitleButton = new JButton("Rasti užduotį pagal pavadinimą");
+    
+        // Set background color for the buttons (optional)
+        addTaskButton.setBackground(Color.GREEN);
+        deleteTaskByPosButton.setBackground(Color.RED);
+        deleteTaskByTitleButton.setBackground(Color.BLUE);
+        showTaskButton.setBackground(Color.PINK);
+        findTaskByDeadlineButton.setBackground(Color.ORANGE);
+        findTaskByTitleButton.setBackground(Color.MAGENTA);
+    
+        buttonPanel.add(addTaskButton);
+        buttonPanel.add(deleteTaskByPosButton);
+        buttonPanel.add(deleteTaskByTitleButton);
+        buttonPanel.add(showTaskButton);
+        buttonPanel.add(findTaskByDeadlineButton);
+        buttonPanel.add(findTaskByTitleButton);
+    
+        mainPanel.add(buttonPanel, BorderLayout.CENTER); // Place the buttonPanel in the center
+
+        addTaskButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                cardLayout.show(cardPanel, "AddTaskScreen");
+            }
+        });
+
+        showTaskButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                cardLayout.show(cardPanel, "ShowTaskScreen");
+            }
+        });
+    
+        deleteTaskByPosButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                cardLayout.show(cardPanel, "DelByPosScreen");
+            }
+        });
+
+        deleteTaskByTitleButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                cardLayout.show(cardPanel, "DelByTitleScreen");
+            }
+        });
+    
+        cardPanel.add(mainPanel, "MainScreen");
+    }
+
+    public void printTasksUI(){
+        
+    }
+
+    public void deleteByPosUI(){
+        deleteTaskPanel.setLayout(new GridLayout(2, 1));
+        
+        position = new JTextField(20);
+        deleteTaskPanel.add(new JLabel("Pozicija:"));
+        deleteTaskPanel.add(position);
+
+        JButton deleteByPos = new JButton("Istrinti");
+        deleteByPos.addActionListener(new ActionListener() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            String temp = position.getText();
+
+            if (!temp.isEmpty()) {
+                try {
+                    int pos = Integer.parseInt(temp);
+
+                    
+                    Nuskaityti.deleteTaskByPos(pos);
+                    Nuskaityti.deleteTaskInFile(pos);
+                    System.out.println("success");
+                } catch (NumberFormatException ex) {
+                    System.err.println("Invalid position input: " + temp);
+                }
+            } else {
+                System.err.println("Position field is empty");
+            }
+        }
+        });
+
+        deleteTaskPanel.add(deleteByPos);
+
+        cardPanel.add(deleteTaskPanel, "DelByPosScreen");
+    }
+
+    public void deleteByTitleUI(){
+        deleteTaskByTitlePanel.setLayout(new GridLayout(2, 1));
+        
+        taskTitleField = new JTextField(20);
+
+        deleteTaskByTitlePanel.add(new JLabel("Uzduoties pavadinimas:"));
+        deleteTaskByTitlePanel.add(taskTitleField);
+
+        JButton deleteByTitle = new JButton("Istrinti");
+        deleteByTitle.addActionListener(new ActionListener() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            String title = taskTitleField.getText();
+
+            
+            Nuskaityti.deleteTaskByTitle(title);
+            Nuskaityti.deleteTaskInFileTitle(title);
+            
+        }
+        });
+
+        deleteTaskByTitlePanel.add(deleteByTitle);
+
+        cardPanel.add(deleteTaskByTitlePanel, "DelByTitleScreen");
+    }
+
+    public void addTaskUI(){
+        addTaskPanel.setLayout(new GridLayout(7, 2));
+
+        position = new JTextField(20);
+        taskTitleField = new JTextField(20);
+        subjectField = new JTextField(20);
+        deadlineField = new JTextField(20);
+        descriptionField = new JTextField(20);
+        additionalInfoField = new JTextField(20);
+
+        addTaskPanel.add(new JLabel("Pozicija:"));
+        addTaskPanel.add(position);
+        addTaskPanel.add(new JLabel("Uzduoties pavadinimas:"));
+        addTaskPanel.add(taskTitleField);
+        addTaskPanel.add(new JLabel("Dalykas:"));
+        addTaskPanel.add(subjectField);
+        addTaskPanel.add(new JLabel("Terminas:"));
+        addTaskPanel.add(deadlineField);
+        addTaskPanel.add(new JLabel("Aprasymas:"));
+        addTaskPanel.add(descriptionField);
+        addTaskPanel.add(new JLabel("Papildoma informacija:"));
+        addTaskPanel.add(additionalInfoField);
+
+        JButton addButton = new JButton("Prideti uzduoti");
+        addButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    String temp = position.getText();
+                    int pos = Integer.parseInt(temp);
+                    String title = taskTitleField.getText();
+                    String subject = subjectField.getText();
+                    String deadline = deadlineField.getText();
+                    String description = descriptionField.getText();
+                    String additional = additionalInfoField.getText();
+          
+                    Nuskaityti.addTask(pos, title, subject, deadline, description, additional);
+                    Nuskaityti.writeTasks();
+                    
+                    taskTitleField.setText("");
+                    subjectField.setText("");
+                    deadlineField.setText("");
+                    descriptionField.setText("");
+                    additionalInfoField.setText("");
+
+                } catch (ParseException parseException) {
+                    parseException.printStackTrace();
+                }
+            }
+        });
+
+        addTaskPanel.add(addButton);
+
+        cardPanel.add(addTaskPanel, "AddTaskScreen");
+
+    }
+
+    public void goBackButton(){
+        JButton goBackButtonAdd = new JButton("Grizti");
+        goBackButtonAdd.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                cardLayout.show(cardPanel, "MainScreen");
+            }
+        });
+        addTaskPanel.add(goBackButtonAdd);
+        cardPanel.add(addTaskPanel, "AddTaskScreen");
+
+        JButton goBackButtonPrint = new JButton("Grizti");
+        goBackButtonPrint.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                cardLayout.show(cardPanel, "MainScreen");
+            }
+        });
+        printTaskPanel.add(goBackButtonPrint);
+        cardPanel.add(printTaskPanel, "ShowTaskScreen");
+    
+        JButton goBackButtonDelete = new JButton("Grizti");
+        goBackButtonDelete.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                cardLayout.show(cardPanel, "MainScreen");
+            }
+        });
+        deleteTaskPanel.add(goBackButtonDelete);
+        cardPanel.add(deleteTaskPanel, "DelByPosScreen");
+    
+        JButton goBackButtonDeleteByTitle = new JButton("Grizti");
+        goBackButtonDeleteByTitle.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                cardLayout.show(cardPanel, "MainScreen");
+            }
+        });
+        deleteTaskByTitlePanel.add(goBackButtonDeleteByTitle);
+        cardPanel.add(deleteTaskByTitlePanel, "DelByTitleScreen");
+    }
+}
