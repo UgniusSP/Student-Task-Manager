@@ -1,4 +1,6 @@
 package nd;
+
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -9,7 +11,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
 import java.util.Date;
-import com.fasterxml.jackson.databind.JsonNode;
 //import java.util.Scanner;
 import java.io.File;
 import java.io.IOException;
@@ -21,18 +22,35 @@ import java.util.Iterator;
 public class Nuskaityti {
 
     public static LinkedList<Task> taskList = new LinkedList<>();
-    public static LinkedList <Task> queue = new LinkedList<Task>();
+    public static LinkedList <Task> queue = new LinkedList<>();
+    public static LinkedList <Task> taskHistory = new LinkedList<>();
+    private static final ObjectMapper objectMapper  = new ObjectMapper();
+    private static final File file = new File("src/main/java/nd/tasks.json");
+
     public static void main(String[] args) throws ParseException {
         
-            readTasks();
-            //addTask();
-            //deleteTask();
-            //findTask();
-            //wipeList();
-            //changeTask();   
-            //printTasks(taskList);
-            writeTasks();
-        
+    }
+
+    public static void readTasks(){
+        try {
+            JsonNode jsonNode = objectMapper.readTree(new File("src\\main\\java\\nd\\tasks.json"));
+
+            if (jsonNode.isArray() && jsonNode != null) {
+                for (JsonNode taskNode : jsonNode) {
+                    Task task = new Task(
+                            taskNode.get("taskTitle").asText(),
+                            taskNode.get("subject").asText(),
+                            taskNode.get("dueDate").asText(),
+                            taskNode.get("description").asText(),
+                            taskNode.get("additionalInfo").asText()
+                    );
+                    taskHistory.add(task);
+                }
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public static void writeTasks(){
@@ -46,21 +64,17 @@ public class Nuskaityti {
                 taskNode.put("additionalInfo", task.getAdditionalInfo());
                 tasksArray.add(taskNode);
             }
-            
-            ObjectMapper objectMapper = new ObjectMapper();
+
         try {
-            File file = new File("src\\main\\java\\nd\\tasks.json");
             objectMapper.writerWithDefaultPrettyPrinter().writeValue(file, tasksArray);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public static void deleteTaskInFile(int position){
+    public static void deleteTaskByPos(int position){
         
         try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            File file = new File("src\\main\\java\\nd\\tasks.json");
     
             ArrayNode tasksArray = objectMapper.readValue(file, ArrayNode.class);
     
@@ -75,10 +89,8 @@ public class Nuskaityti {
        
     }
 
-    public static void deleteTaskInFileTitle(String title){
+    public static void deleteTaskByTitle(String title){
         try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            File file = new File("src\\main\\java\\nd\\tasks.json");
     
             ArrayNode tasksArray = objectMapper.readValue(file, ArrayNode.class);
     
@@ -91,29 +103,6 @@ public class Nuskaityti {
             }
     
             objectMapper.writerWithDefaultPrettyPrinter().writeValue(file, tasksArray);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public static void readTasks(){
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode jsonNode = objectMapper.readTree(new File("src\\main\\java\\nd\\tasks.json"));
-
-            if (jsonNode.isArray() && jsonNode != null) {
-                for (JsonNode taskNode : jsonNode) {
-                    Task task = new Task(
-                            taskNode.get("taskTitle").asText(),
-                            taskNode.get("subject").asText(),
-                            taskNode.get("dueDate").asText(),
-                            taskNode.get("description").asText(),
-                            taskNode.get("additionalInfo").asText()
-                    );
-                    taskList.add(task);
-                }
-            }
-
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -132,7 +121,7 @@ public class Nuskaityti {
 
     public static void addTask(int pos, String title, String subject, String deadline, String description, String additional) throws ParseException{
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-mm-dd");
-        
+
         //IDEJIMAS I LINKED LISTA
 
         Task task = new Task(
@@ -151,27 +140,6 @@ public class Nuskaityti {
             System.out.println("Uzduoties terminas jau pasibaiges! Uzduotis neprideta.");
         }
 
-    }
-
-    public static void deleteTaskByTitle(String title){
-        Iterator <Task> iterator = taskList.iterator();
-
-            while (iterator.hasNext()) {
-                Task task = iterator.next();
-                
-                if (title.equals(task.getTaskTitle())) {
-                    iterator.remove(); 
-                    System.out.println("\nUzduotis " + title + " sekmingai pasalinta!\n");
-                    break;
-                } else {
-                    System.out.println("\nBlogai ivesta uzduotis" + title + "\n");
-                }
-            }
-    }
-
-
-    public static void deleteTaskByPos(int pos){
-        taskList.remove(pos);
     }
 
     public static void findTaskByTitle(String title){

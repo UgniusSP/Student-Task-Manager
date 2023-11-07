@@ -39,7 +39,6 @@ public class UI extends JFrame {
 
         cardLayout = new CardLayout();
         cardPanel = new JPanel(cardLayout);
-        Nuskaityti.readTasks();
         createMainScreen();
         addTaskUI();
         printTasksUI();
@@ -140,10 +139,10 @@ public class UI extends JFrame {
             if (!temp.isEmpty()) {
                 try {
                     int pos = Integer.parseInt(temp);
-                    Nuskaityti.readTasks();
+                    
                     Nuskaityti.deleteTaskByPos(pos);
-                    Nuskaityti.deleteTaskInFile(pos);
                     System.out.println("success");
+                    
                 } catch (NumberFormatException ex) {
                     System.err.println("Invalid position input: " + temp);
                 }
@@ -171,9 +170,8 @@ public class UI extends JFrame {
         @Override
         public void actionPerformed(ActionEvent e) {
             String title = taskTitleFieldDel.getText();
-            Nuskaityti.readTasks();
+            
             Nuskaityti.deleteTaskByTitle(title);
-            Nuskaityti.deleteTaskInFileTitle(title);
             
         }
         });
@@ -218,7 +216,7 @@ public class UI extends JFrame {
                     String description = descriptionField.getText();
                     String additional = additionalInfoField.getText();
                     
-                    Nuskaityti.readTasks();
+                    
                     Nuskaityti.addTask(posStr, title, subject, deadline, description, additional);
                     Nuskaityti.writeTasks();
                     
@@ -254,7 +252,7 @@ public class UI extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String title = taskTitleFieldFindByTitle.getText();
-                Nuskaityti.readTasks();
+               
                 Nuskaityti.findTaskByTitle(title);
     
                 JTextArea resultTextArea = new JTextArea(10, 30);
@@ -266,7 +264,7 @@ public class UI extends JFrame {
     
                 JScrollPane scrollPane = new JScrollPane(resultTextArea);
   
-                JOptionPane.showMessageDialog(findByTitlePanel, scrollPane, "Search Results", JOptionPane.PLAIN_MESSAGE);
+                JOptionPane.showMessageDialog(findByTitlePanel, scrollPane, "Rastos uzduotys", JOptionPane.PLAIN_MESSAGE);
             }
         });
         
@@ -289,7 +287,7 @@ public class UI extends JFrame {
         @Override
         public void actionPerformed(ActionEvent e) {
             String title = taskTitleFieldFindByDeadline.getText();
-            Nuskaityti.readTasks();
+           
             Nuskaityti.findTaskByDeadline(title);
             System.out.println(Nuskaityti.queue);
 
@@ -302,7 +300,7 @@ public class UI extends JFrame {
     
             JScrollPane scrollPane = new JScrollPane(resultTextArea);
   
-            JOptionPane.showMessageDialog(findByTitlePanel, scrollPane, "Search Results", JOptionPane.PLAIN_MESSAGE);
+            JOptionPane.showMessageDialog(findByTitlePanel, scrollPane, "Rastos uzduotys", JOptionPane.PLAIN_MESSAGE);
         }
         });
         
@@ -335,7 +333,7 @@ public class UI extends JFrame {
         changeButton.addActionListener(new ActionListener() {
         @Override
         public void actionPerformed(ActionEvent e) {
-            Nuskaityti.readTasks();
+            
             Nuskaityti.changeTask(changeTaskField.getText(), newSubject.getText(), newDeadline.getText(), newDescription.getText(), newAdditionalInfo.getText());
             Nuskaityti.writeTasks();
         }
