@@ -79,8 +79,8 @@ public class UI extends JFrame {
             createButton("Pridėti užduotį", Color.GREEN, "AddTaskScreen"),
             createButton("Ištrinti užduotį pagal poziciją", Color.RED, "DelByPosScreen"),
             createButton("Ištrinti užduotį pagal pavadinimą", Color.BLUE, "DelByTitleScreen"),
-            createButton("Parodyti visas užduotis", Color.PINK, "ShowTaskScreen"),
             createButton("Rasti užduotį pagal terminą", Color.ORANGE, "FindByDeadTaskScreen"),
+            createButton("Rodyti visas uzduotis", Color.YELLOW, "ShowTaskScreen"),
             createButton("Rasti užduotį pagal pavadinimą", Color.MAGENTA, "FindByTitleTaskScreen"),
             createButton("Pakeisti surastą užduotį", Color.MAGENTA, "ChangeTaskScreen")
         };
@@ -106,19 +106,28 @@ public class UI extends JFrame {
         JTextArea textArea = new JTextArea();
         textArea.setEditable(false);
     
-        JScrollPane scrollPane = new JScrollPane(textArea);
+        JButton printTaskButton = new JButton("Rodyti");
+        printTaskButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e){
+
+                Nuskaityti.readTasks();
+                for (Task task : Nuskaityti.taskList) {
+                    textArea.append("Pavadinimas: " + task.getTaskTitle() + "\n");
+                    textArea.append("Dalykas: " + task.getSubject() + "\n");
+                    textArea.append("Termino pabaiga: " + task.getdeadline() + "\n");
+                    textArea.append("Aprasymas: " + task.getDescription() + "\n");
+                    textArea.append("Papildoma informacija: " + task.getAdditionalInfo() + "\n\n");
+                }
+                Nuskaityti.wipeList(Nuskaityti.taskList);
     
-        printTaskPanel.add(scrollPane, BorderLayout.CENTER);
-    
-        textArea.setText("");
-    
-        for (Task task : Nuskaityti.taskList) {
-            textArea.append("Pavadinimas: " + task.getTaskTitle() + "\n");
-            textArea.append("Dalykas: " + task.getSubject() + "\n");
-            textArea.append("Termino pabaiga: " + task.getdeadline() + "\n");
-            textArea.append("Aprasymas: " + task.getDescription() + "\n");
-            textArea.append("Papildoma informacija: " + task.getAdditionalInfo() + "\n\n");
-        }
+                JScrollPane scrollPane = new JScrollPane(textArea);
+  
+                JOptionPane.showMessageDialog(printTaskPanel, scrollPane, "Rastos uzduotys", JOptionPane.PLAIN_MESSAGE);
+            }
+        });
+
+        printTaskPanel.add(printTaskButton);
     
         cardPanel.add(printTaskPanel, "ShowTaskScreen");
     }
@@ -141,8 +150,9 @@ public class UI extends JFrame {
                     int pos = Integer.parseInt(temp);
                     
                     Nuskaityti.deleteTaskByPos(pos);
+                    Nuskaityti.deleteTaskInFileByPos(pos);
                     System.out.println("success");
-                    
+
                 } catch (NumberFormatException ex) {
                     System.err.println("Invalid position input: " + temp);
                 }
@@ -172,7 +182,8 @@ public class UI extends JFrame {
             String title = taskTitleFieldDel.getText();
             
             Nuskaityti.deleteTaskByTitle(title);
-            
+            Nuskaityti.deleteTaskInFileTitle(title);
+            System.out.println("success");
         }
         });
 
@@ -218,7 +229,6 @@ public class UI extends JFrame {
                     
                     
                     Nuskaityti.addTask(posStr, title, subject, deadline, description, additional);
-                    Nuskaityti.writeTasks();
                     
                     positionAdd.setText("");
                     taskTitleFieldAdd.setText("");
@@ -335,7 +345,7 @@ public class UI extends JFrame {
         public void actionPerformed(ActionEvent e) {
             
             Nuskaityti.changeTask(changeTaskField.getText(), newSubject.getText(), newDeadline.getText(), newDescription.getText(), newAdditionalInfo.getText());
-            Nuskaityti.writeTasks();
+          
         }
         });
 

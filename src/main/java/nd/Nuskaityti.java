@@ -23,12 +23,12 @@ public class Nuskaityti {
 
     public static LinkedList<Task> taskList = new LinkedList<>();
     public static LinkedList <Task> queue = new LinkedList<>();
-    public static LinkedList <Task> taskHistory = new LinkedList<>();
-    private static final ObjectMapper objectMapper  = new ObjectMapper();
+    private static LinkedList <Task> taskListCopy = new LinkedList<>();
+    private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final File file = new File("src/main/java/nd/tasks.json");
 
     public static void main(String[] args) throws ParseException {
-        
+        writeTasks();
     }
 
     public static void readTasks(){
@@ -40,11 +40,11 @@ public class Nuskaityti {
                     Task task = new Task(
                             taskNode.get("taskTitle").asText(),
                             taskNode.get("subject").asText(),
-                            taskNode.get("dueDate").asText(),
+                            taskNode.get("deadline").asText(),
                             taskNode.get("description").asText(),
                             taskNode.get("additionalInfo").asText()
                     );
-                    taskHistory.add(task);
+                    taskList.add(task);
                 }
             }
 
@@ -55,15 +55,17 @@ public class Nuskaityti {
 
     public static void writeTasks(){
         ArrayNode tasksArray = JsonNodeFactory.instance.arrayNode();
-            for(Task task : taskList){
+        taskListCopy = (LinkedList<Task>) taskList.clone();
+        wipeList(taskList);
+            for(Task task : taskListCopy){
                 ObjectNode taskNode = JsonNodeFactory.instance.objectNode();
                 taskNode.put("taskTitle", task.getTaskTitle());
                 taskNode.put("subject", task.getSubject());
-                taskNode.put("dueDate", task.getdeadline());
+                taskNode.put("deadline", task.getdeadline());
                 taskNode.put("description", task.getDescription());
                 taskNode.put("additionalInfo", task.getAdditionalInfo());
                 tasksArray.add(taskNode);
-            }
+            }  
 
         try {
             objectMapper.writerWithDefaultPrettyPrinter().writeValue(file, tasksArray);
@@ -72,10 +74,8 @@ public class Nuskaityti {
         }
     }
 
-    public static void deleteTaskByPos(int position){
-        
+    public static void deleteTaskInFileByPos(int position){
         try {
-    
             ArrayNode tasksArray = objectMapper.readValue(file, ArrayNode.class);
     
             if(position >= 0 && tasksArray.size() > position){
@@ -89,9 +89,8 @@ public class Nuskaityti {
        
     }
 
-    public static void deleteTaskByTitle(String title){
+    public static void deleteTaskInFileTitle(String title){
         try {
-    
             ArrayNode tasksArray = objectMapper.readValue(file, ArrayNode.class);
     
             for (int i = 0; i < tasksArray.size(); i++) {
@@ -108,21 +107,15 @@ public class Nuskaityti {
         }
     }
 
-    public static void printTasks(LinkedList <Task> list){
-        for (Task task : list) {
-            System.out.println("Pavadinimas: " + task.getTaskTitle());
-            System.out.println("Dalykas: " + task.getSubject());
-            System.out.println("Termino pabaiga: " + task.getdeadline());
-            System.out.println("Aprasymas: " + task.getDescription());
-            System.out.println("Papildoma informacija: " + task.getAdditionalInfo());
-            System.out.println();
-        }
-    }
+    // public static void printTasks(){
+    //     readTasks();
+    //     wipeList(taskList);
+    // }
 
     public static void addTask(int pos, String title, String subject, String deadline, String description, String additional) throws ParseException{
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-mm-dd");
-
-        //IDEJIMAS I LINKED LISTA
+        readTasks();
+        //NAUJU UZDUOCIU IDEJIMAS I LINKED LISTA
 
         Task task = new Task(
             title,
@@ -139,10 +132,34 @@ public class Nuskaityti {
         } else {
             System.out.println("Uzduoties terminas jau pasibaiges! Uzduotis neprideta.");
         }
+        writeTasks();
+    }
 
+    public static void deleteTaskByTitle(String title){
+        Iterator <Task> iterator = taskList.iterator();
+
+            while (iterator.hasNext()) {
+                Task task = iterator.next();
+                
+                if (title.equals(task.getTaskTitle())) {
+                    iterator.remove(); 
+                    System.out.println("\nUzduotis " + title + " sekmingai pasalinta!\n");
+                    break;
+                } else {
+                    System.out.println("\nBlogai ivesta uzduotis" + title + "\n");
+                }
+            }
+    }
+
+
+    public static void deleteTaskByPos(int pos){
+        readTasks();
+        taskList.remove(pos);
+        wipeList(taskList);
     }
 
     public static void findTaskByTitle(String title){
+        readTasks();
         Iterator <Task> iterator = taskList.iterator();
 
             while(iterator.hasNext()){
@@ -158,9 +175,11 @@ public class Nuskaityti {
                 queue.add(temp);
                 } 
             }
+        wipeList(taskList);
     }
 
     public static void findTaskByDeadline(String deadline){
+        readTasks();
         Iterator <Task> iterator = taskList.iterator();
 
             while(iterator.hasNext()){
@@ -176,14 +195,15 @@ public class Nuskaityti {
                 queue.add(temp);
                 } 
             }
+        wipeList(taskList);
     }
 
-    public static void wipeList(){
-        taskList.removeAll(taskList);
+    public static void wipeList(LinkedList <Task> list){
+        taskList.removeAll(list);
     }
 
     public static void changeTask(String taskToUpdateTitle, String newSubject, String newDeadline, String newDescription, String newAdditionalInfo){
-
+        readTasks();
         Task taskInQueue = null;
         for (Task task : queue) {
             if (task.getTaskTitle().equals(taskToUpdateTitle)) {
@@ -213,7 +233,7 @@ public class Nuskaityti {
         } else {
             System.out.println("Uzduotis nerasta.");
         }
-        
+        writeTasks();
     }
     
     public static void sortTasksByDeadline(){
