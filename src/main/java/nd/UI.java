@@ -31,14 +31,18 @@ public class UI extends JFrame {
     JPanel findByDeadlinePanel = new JPanel();
     JPanel findByTitlePanel = new JPanel();
     JPanel changeTaskPanel = new JPanel();
+    JPanel mainPanel = new JPanel(new BorderLayout());
+    JTextArea boxText = new JTextArea(7,40);
 
     public UI() {
         setTitle("Studento uzduociu tvarkytuvas");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(400, 300);
-
+        setSize(500, 500);
+        
         cardLayout = new CardLayout();
         cardPanel = new JPanel(cardLayout);
+        boxText.setText("");
+
         createMainScreen();
         addTaskUI();
         printTasksUI();
@@ -46,6 +50,7 @@ public class UI extends JFrame {
         deleteByTitleUI();
         findTaskByTitleUI();
         findTaskByDeadlineUI();
+        
         changeTaskUI();
         goBackButton(addTaskPanel, "AddTaskScreen");
         goBackButton(printTaskPanel, "ShowTaskScreen");
@@ -54,10 +59,11 @@ public class UI extends JFrame {
         goBackButton(findByTitlePanel, "FindByTitleTaskScreen");
         goBackButton(findByDeadlinePanel, "FindByDeadTaskScreen");
         goBackButton(changeTaskPanel, "ChangeTaskScreen");
-
+        
         add(cardPanel);
 
         setVisible(true);
+        
     }
 
     public static void main(String[] args) {
@@ -72,8 +78,7 @@ public class UI extends JFrame {
     private void createMainScreen() {
         JPanel mainPanel = new JPanel(new BorderLayout());
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-    
-        mainPanel.add(buttonPanel, BorderLayout.CENTER);
+        buttonPanel.setPreferredSize(new Dimension(200,200));
         
         JButton[] buttons = {
             createButton("Pridėti užduotį", Color.GREEN, "AddTaskScreen"),
@@ -88,9 +93,41 @@ public class UI extends JFrame {
         for (JButton button : buttons) {
             buttonPanel.add(button);
         }
+        mainPanel.add(buttonPanel, BorderLayout.NORTH);
+
+        boxText.setLineWrap(true);
+        boxText.setWrapStyleWord(true);
+        boxText.setEditable(false);
+
+        JPanel textAreaContainer = new JPanel(new GridBagLayout());
+        textAreaContainer.setPreferredSize(new Dimension(500,500));
+        textAreaContainer.add(new JScrollPane(boxText));
+
+        boxText.setText(showClosestDeadlineUI());
+        
+        mainPanel.add(textAreaContainer, BorderLayout.CENTER);
     
         cardPanel.add(mainPanel, "MainScreen");
     }
+    
+    
+
+    private String showClosestDeadlineUI() {
+        StringBuilder output = new StringBuilder();
+        Nuskaityti.readTasks();
+        Nuskaityti.findTaskByDeadline(Nuskaityti.closestDeadline());
+
+            for (Task task : Nuskaityti.queue) {
+                output.append("Pavadinimas: " + task.getTaskTitle() + "\n");
+                output.append("Dalykas: " + task.getSubject() + "\n");
+                output.append("Termino pabaiga: " + task.getdeadline() + "\n");
+                output.append("Aprasymas: " + task.getDescription() + "\n");
+                output.append("Papildoma informacija: " + task.getAdditionalInfo() + "\n\n");
+            }
+        return output.toString();
+    }
+
+    
     
     private JButton createButton(String text, Color backgroundColor, String cardName) {
         JButton button = new JButton(text);
@@ -343,10 +380,13 @@ public class UI extends JFrame {
         changeButton.addActionListener(new ActionListener() {
         @Override
         public void actionPerformed(ActionEvent e) {
+            if(Nuskaityti.taskInList != null && Nuskaityti.taskInQueue != null){
+                Nuskaityti.changeTask(changeTaskField.getText(), newSubject.getText(), newDeadline.getText(), newDescription.getText(), newAdditionalInfo.getText());
+            } else {
+                JOptionPane.showMessageDialog(changeTaskField, "Nerasta ne viena uzduotis!", "Rastos uzduotys", JOptionPane.PLAIN_MESSAGE);
+            }   
             
-            Nuskaityti.changeTask(changeTaskField.getText(), newSubject.getText(), newDeadline.getText(), newDescription.getText(), newAdditionalInfo.getText());
-          
-        }
+        } 
         });
 
         changeTaskPanel.add(changeButton);

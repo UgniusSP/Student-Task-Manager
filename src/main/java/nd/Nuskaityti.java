@@ -26,9 +26,11 @@ public class Nuskaityti {
     private static LinkedList <Task> taskListCopy = new LinkedList<>();
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final File file = new File("src/main/java/nd/tasks.json");
+    public static String deadlineToReturn;
 
     public static void main(String[] args) throws ParseException {
-        writeTasks();
+        readTasks();
+        findTaskByDeadline(closestDeadline());
     }
 
     public static void readTasks(){
@@ -132,6 +134,7 @@ public class Nuskaityti {
         } else {
             System.out.println("Uzduoties terminas jau pasibaiges! Uzduotis neprideta.");
         }
+        
         writeTasks();
     }
 
@@ -184,6 +187,7 @@ public class Nuskaityti {
 
             while(iterator.hasNext()){
                 Task task = iterator.next();
+                //System.out.println(deadline);
                 if(deadline.equals(task.getdeadline())){
                 Task temp = new Task(
                         task.getTaskTitle(),
@@ -193,18 +197,48 @@ public class Nuskaityti {
                         task.getAdditionalInfo()
                         );
                 queue.add(temp);
+                } else {
+                    System.out.println("aaaaaaaaaaaaaaaaaa");
+                }
+            }
+            wipeList(taskList);
+    }
+
+    public static String closestDeadline(){
+        readTasks();
+        Date smallestDate = null;
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-mm-dd");
+        
+        for(Task task : taskList){
+            Date taskDate;
+            try {
+                taskDate = simpleDateFormat.parse(task.getdeadline());
+            } catch (ParseException e) {
+                e.printStackTrace();
+                taskDate = null;
+            }
+            if(taskDate != null){
+                if(smallestDate == null || taskDate.before(smallestDate)){
+                    smallestDate = taskDate;
                 } 
             }
+            
+        }
         wipeList(taskList);
+        System.out.println(new SimpleDateFormat("yyyy-mm-dd").format(smallestDate));
+        return new SimpleDateFormat("yyyy-mm-dd").format(smallestDate);
     }
 
     public static void wipeList(LinkedList <Task> list){
         taskList.removeAll(list);
     }
 
+    public static Task taskInQueue = null;
+    public static Task taskInList = null;
+
     public static void changeTask(String taskToUpdateTitle, String newSubject, String newDeadline, String newDescription, String newAdditionalInfo){
         readTasks();
-        Task taskInQueue = null;
+        
         for (Task task : queue) {
             if (task.getTaskTitle().equals(taskToUpdateTitle)) {
                 taskInQueue = task;
@@ -212,7 +246,6 @@ public class Nuskaityti {
             }
         }
 
-        Task taskInList = null;
         for (Task task : taskList) {
             if (task.getTaskTitle().equals(taskToUpdateTitle)) {
                 taskInList = task;
