@@ -5,6 +5,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.text.ParseException;
+import java.util.LinkedList;
 
 public class UI extends JFrame { 
     private static JTextField positionDel;
@@ -32,8 +33,11 @@ public class UI extends JFrame {
     JPanel findByTitlePanel = new JPanel();
     JPanel changeTaskPanel = new JPanel();
     JPanel mainPanel = new JPanel(new BorderLayout());
+    JPanel sortTaskPanel = new JPanel(new BorderLayout());
+    JPanel wipePanel = new JPanel();
     JTextArea boxText = new JTextArea(7,40);
-
+    private static LinkedList <Task> list;
+    
     public UI() {
         setTitle("Studento uzduociu tvarkytuvas");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -50,8 +54,9 @@ public class UI extends JFrame {
         deleteByTitleUI();
         findTaskByTitleUI();
         findTaskByDeadlineUI();
-        
+        wipeListUI();
         changeTaskUI();
+        sortTasksByDeadlineUI();
         goBackButton(addTaskPanel, "AddTaskScreen");
         goBackButton(printTaskPanel, "ShowTaskScreen");
         goBackButton(deleteTaskPanel, "DelByPosScreen");
@@ -59,6 +64,8 @@ public class UI extends JFrame {
         goBackButton(findByTitlePanel, "FindByTitleTaskScreen");
         goBackButton(findByDeadlinePanel, "FindByDeadTaskScreen");
         goBackButton(changeTaskPanel, "ChangeTaskScreen");
+        goBackButton(wipePanel, "WipeTaskScreen");
+        goBackButton(sortTaskPanel, "SortTaskScreen");
         
         add(cardPanel);
 
@@ -87,14 +94,16 @@ public class UI extends JFrame {
             createButton("Rasti užduotį pagal terminą", Color.ORANGE, "FindByDeadTaskScreen"),
             createButton("Rodyti visas uzduotis", Color.YELLOW, "ShowTaskScreen"),
             createButton("Rasti užduotį pagal pavadinimą", Color.MAGENTA, "FindByTitleTaskScreen"),
-            createButton("Pakeisti surastą užduotį", Color.MAGENTA, "ChangeTaskScreen")
+            createButton("Pakeisti surastą užduotį", Color.MAGENTA, "ChangeTaskScreen"),
+            createButton("Surūšiuoti užduotis pagal terminą ir jas parodyti ekrane", Color.BLUE, "SortTaskScreen"),
+            createButton("Išvalyti sąrašą", Color.MAGENTA, "WipeTaskScreen")
         };
     
         for (JButton button : buttons) {
             buttonPanel.add(button);
         }
         mainPanel.add(buttonPanel, BorderLayout.NORTH);
-
+        
         boxText.setLineWrap(true);
         boxText.setWrapStyleWord(true);
         boxText.setEditable(false);
@@ -114,15 +123,16 @@ public class UI extends JFrame {
 
     private String showClosestDeadlineUI() {
         StringBuilder output = new StringBuilder();
-        Nuskaityti.readTasks();
-        Nuskaityti.findTaskByDeadline(Nuskaityti.closestDeadline());
+        
+        Nuskaityti.sortTasksByDeadline(list);
 
-            for (Task task : Nuskaityti.queue) {
+            for (Task task : Nuskaityti.taskList) {
                 output.append("Pavadinimas: " + task.getTaskTitle() + "\n");
                 output.append("Dalykas: " + task.getSubject() + "\n");
                 output.append("Termino pabaiga: " + task.getdeadline() + "\n");
                 output.append("Aprasymas: " + task.getDescription() + "\n");
                 output.append("Papildoma informacija: " + task.getAdditionalInfo() + "\n\n");
+                break;
             }
         return output.toString();
     }
@@ -139,7 +149,7 @@ public class UI extends JFrame {
     }
     
 
-    public void printTasksUI() {
+    private void printTasksUI() {
         JTextArea textArea = new JTextArea();
         textArea.setEditable(false);
     
@@ -161,6 +171,7 @@ public class UI extends JFrame {
                 JScrollPane scrollPane = new JScrollPane(textArea);
   
                 JOptionPane.showMessageDialog(printTaskPanel, scrollPane, "Rastos uzduotys", JOptionPane.PLAIN_MESSAGE);
+                textArea.setText("");
             }
         });
 
@@ -169,7 +180,7 @@ public class UI extends JFrame {
         cardPanel.add(printTaskPanel, "ShowTaskScreen");
     }
 
-    public void deleteByPosUI(){
+    private void deleteByPosUI(){
         deleteTaskPanel.setLayout(new GridLayout(2, 1));
         
         positionDel = new JTextField(20);
@@ -204,7 +215,7 @@ public class UI extends JFrame {
         cardPanel.add(deleteTaskPanel, "DelByPosScreen");
     }
 
-    public void deleteByTitleUI(){
+    private void deleteByTitleUI(){
         deleteTaskByTitlePanel.setLayout(new GridLayout(2, 1));
         
         taskTitleFieldDel = new JTextField(20);
@@ -218,8 +229,14 @@ public class UI extends JFrame {
         public void actionPerformed(ActionEvent e) {
             String title = taskTitleFieldDel.getText();
             
-            Nuskaityti.deleteTaskByTitle(title);
-            Nuskaityti.deleteTaskInFileTitle(title);
+            if(Nuskaityti.deltemp > 1){
+
+            } else {
+                Nuskaityti.deleteTaskByTitle(title);
+                Nuskaityti.deleteTaskInFileTitle(title);
+            }
+
+            
             System.out.println("success");
         }
         });
@@ -229,7 +246,7 @@ public class UI extends JFrame {
         cardPanel.add(deleteTaskByTitlePanel, "DelByTitleScreen");
     }
 
-    public void addTaskUI(){
+    private void addTaskUI(){
         addTaskPanel.setLayout(new GridLayout(7, 2));
 
         positionAdd = new JTextField(20);
@@ -264,8 +281,12 @@ public class UI extends JFrame {
                     String description = descriptionField.getText();
                     String additional = additionalInfoField.getText();
                     
-                    
                     Nuskaityti.addTask(posStr, title, subject, deadline, description, additional);
+                    if(Nuskaityti.addBool == false){
+                        JOptionPane.showMessageDialog(addTaskPanel, "Užduotis sėkmingai pridėta.", "ALERT", JOptionPane.PLAIN_MESSAGE);
+                    } else if (Nuskaityti.addBool == true){
+                        JOptionPane.showMessageDialog(addTaskPanel, "Pasibaigęs užduoties terminas.", "ALERT", JOptionPane.PLAIN_MESSAGE);
+                    }
                     
                     positionAdd.setText("");
                     taskTitleFieldAdd.setText("");
@@ -286,7 +307,7 @@ public class UI extends JFrame {
 
     }
 
-    public void findTaskByTitleUI(){
+    private void findTaskByTitleUI(){
         findByTitlePanel.setLayout(new GridLayout(2, 1));
             
         taskTitleFieldFindByTitle = new JTextField(20);
@@ -308,10 +329,11 @@ public class UI extends JFrame {
                 for (Task result : Nuskaityti.queue) {
                     resultTextArea.append(result + "\n");
                 }
-    
+                
                 JScrollPane scrollPane = new JScrollPane(resultTextArea);
   
                 JOptionPane.showMessageDialog(findByTitlePanel, scrollPane, "Rastos uzduotys", JOptionPane.PLAIN_MESSAGE);
+                
             }
         });
         
@@ -321,7 +343,7 @@ public class UI extends JFrame {
     }
     
 
-    public void findTaskByDeadlineUI(){
+    private void findTaskByDeadlineUI(){
         findByDeadlinePanel.setLayout(new GridLayout(2, 1));
         
         taskTitleFieldFindByDeadline = new JTextField(20);
@@ -356,7 +378,7 @@ public class UI extends JFrame {
         cardPanel.add(findByDeadlinePanel, "FindByDeadTaskScreen");
     }
 
-    public void changeTaskUI(){
+    private void changeTaskUI(){
         changeTaskPanel.setLayout(new GridLayout(7,2));
 
         changeTaskField = new JTextField(20);
@@ -380,12 +402,12 @@ public class UI extends JFrame {
         changeButton.addActionListener(new ActionListener() {
         @Override
         public void actionPerformed(ActionEvent e) {
-            if(Nuskaityti.taskInList != null && Nuskaityti.taskInQueue != null){
-                Nuskaityti.changeTask(changeTaskField.getText(), newSubject.getText(), newDeadline.getText(), newDescription.getText(), newAdditionalInfo.getText());
-            } else {
-                JOptionPane.showMessageDialog(changeTaskField, "Nerasta ne viena uzduotis!", "Rastos uzduotys", JOptionPane.PLAIN_MESSAGE);
-            }   
-            
+            // if(Nuskaityti.taskInList != null && Nuskaityti.taskInQueue != null){
+                
+            // } else {
+            //     JOptionPane.showMessageDialog(changeTaskField, "Nerasta ne viena uzduotis!", "Rastos uzduotys", JOptionPane.PLAIN_MESSAGE);
+            // }   
+            Nuskaityti.changeTask(changeTaskField.getText(), newSubject.getText(), newDeadline.getText(), newDescription.getText(), newAdditionalInfo.getText());
         } 
         });
 
@@ -395,11 +417,60 @@ public class UI extends JFrame {
     }
 
     private void goBackButton(JPanel panel, String cardName) {
-        JButton goBackButton = new JButton("Grizti");
-        goBackButton.addActionListener(e -> cardLayout.show(cardPanel, "MainScreen"));
+        JButton goBackButton = new JButton("Grįžti");
+        goBackButton.addActionListener(e -> {
+            cardLayout.show(cardPanel, "MainScreen");
+            boxText.setText(showClosestDeadlineUI());
+        });
         panel.add(goBackButton);
         cardPanel.add(panel, cardName);
     }
 
+    private void wipeListUI() {
+        JButton wipeButton = new JButton("Išvalyti");
+        wipeButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e){
+                Nuskaityti.readTasks();
+                Nuskaityti.wipeList(Nuskaityti.taskList);
+                Nuskaityti.writeTasks();
+            }
+        });
 
+        wipePanel.add(wipeButton);
+    
+        cardPanel.add(wipePanel, "WipeTaskScreen");
+    }
+
+    public void sortTasksByDeadlineUI(){
+        sortTaskPanel.setLayout(new GridLayout(2,1));
+
+        JTextArea textArea = new JTextArea();
+        textArea.setEditable(false);
+
+        JButton sortButton = new JButton("Rūšiuoti");
+        sortButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e){
+
+                Nuskaityti.sortTasksByDeadline(Nuskaityti.taskList);
+                for (Task task : Nuskaityti.taskList) {
+                    textArea.append("Pavadinimas: " + task.getTaskTitle() + "\n");
+                    textArea.append("Dalykas: " + task.getSubject() + "\n");
+                    textArea.append("Termino pabaiga: " + task.getdeadline() + "\n");
+                    textArea.append("Aprasymas: " + task.getDescription() + "\n");
+                    textArea.append("Papildoma informacija: " + task.getAdditionalInfo() + "\n\n");
+                }
+                Nuskaityti.wipeList(Nuskaityti.taskList);
+                JScrollPane scrollPane = new JScrollPane(textArea);
+
+                JOptionPane.showMessageDialog(sortTaskPanel, scrollPane, "Surūšiuotos užduotys", JOptionPane.PLAIN_MESSAGE);
+                textArea.setText("");
+            }
+        });
+
+        sortTaskPanel.add(sortButton);
+
+        cardPanel.add(sortTaskPanel, "SortTaskScreen");
+    }
 }

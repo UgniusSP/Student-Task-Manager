@@ -5,18 +5,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-// import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonObjectFormatVisitor;
-// import com.fasterxml.jackson.databind.node.ObjectNode;
-// import com.fasterxml.jackson.databind.util.JSONPObject;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.util.Calendar;
+import java.time.format.DateTimeFormatter;
 import java.text.ParseException;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
-//import java.util.Scanner;
 import java.io.File;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.Iterator;
-
 
 
 public class Nuskaityti {
@@ -27,16 +27,19 @@ public class Nuskaityti {
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final File file = new File("src/main/java/nd/tasks.json");
     public static String deadlineToReturn;
+    public static boolean addBool = false;
+    public static int deltemp = 0;
 
     public static void main(String[] args) throws ParseException {
-        readTasks();
-        findTaskByDeadline(closestDeadline());
+        deleteTaskByTitle("a");
+        deleteTaskInFileTitle("a");
+      
     }
 
     public static void readTasks(){
         try {
             JsonNode jsonNode = objectMapper.readTree(new File("src\\main\\java\\nd\\tasks.json"));
-
+            wipeList(taskList);
             if (jsonNode.isArray() && jsonNode != null) {
                 for (JsonNode taskNode : jsonNode) {
                     Task task = new Task(
@@ -109,11 +112,6 @@ public class Nuskaityti {
         }
     }
 
-    // public static void printTasks(){
-    //     readTasks();
-    //     wipeList(taskList);
-    // }
-
     public static void addTask(int pos, String title, String subject, String deadline, String description, String additional) throws ParseException{
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-mm-dd");
         readTasks();
@@ -127,14 +125,17 @@ public class Nuskaityti {
             additional
             );
         Date date1 = simpleDateFormat.parse(deadline); //deadline
-        Date date2 = simpleDateFormat.parse("2023-11-08"); //siandien
+        Calendar cal = Calendar.getInstance();
+        String temp = simpleDateFormat.format(cal.getTime());
+        Date date2 = simpleDateFormat.parse(temp);
 
         if(date2.before(date1)){ //jeigu deadline pvz 2023-11-01, neleisti prideti
             taskList.add(pos, task);
         } else {
+            addBool = true;
             System.out.println("Uzduoties terminas jau pasibaiges! Uzduotis neprideta.");
         }
-        
+
         writeTasks();
     }
 
@@ -143,12 +144,12 @@ public class Nuskaityti {
 
             while (iterator.hasNext()) {
                 Task task = iterator.next();
-                
                 if (title.equals(task.getTaskTitle())) {
                     iterator.remove(); 
                     System.out.println("\nUzduotis " + title + " sekmingai pasalinta!\n");
                     break;
-                } else {
+                } 
+                 else {
                     System.out.println("\nBlogai ivesta uzduotis" + title + "\n");
                 }
             }
@@ -176,6 +177,7 @@ public class Nuskaityti {
                         task.getAdditionalInfo()
                         );
                 queue.add(temp);
+                
                 } 
             }
         wipeList(taskList);
@@ -187,7 +189,6 @@ public class Nuskaityti {
 
             while(iterator.hasNext()){
                 Task task = iterator.next();
-                //System.out.println(deadline);
                 if(deadline.equals(task.getdeadline())){
                 Task temp = new Task(
                         task.getTaskTitle(),
@@ -197,11 +198,10 @@ public class Nuskaityti {
                         task.getAdditionalInfo()
                         );
                 queue.add(temp);
-                } else {
-                    System.out.println("aaaaaaaaaaaaaaaaaa");
-                }
+                } 
             }
-            wipeList(taskList);
+            
+        wipeList(taskList);
     }
 
     public static String closestDeadline(){
@@ -269,7 +269,10 @@ public class Nuskaityti {
         writeTasks();
     }
     
-    public static void sortTasksByDeadline(){
+    public static void sortTasksByDeadline(LinkedList <Task> list){
+        readTasks();
+        
+        Collections.sort(taskList, Comparator.comparing(task -> LocalDate.parse(task.getdeadline(), DateTimeFormatter.ISO_DATE)));
         
     }
      
