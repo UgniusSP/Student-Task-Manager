@@ -37,7 +37,7 @@ public class UI extends JFrame {
     JPanel wipePanel = new JPanel();
     JTextArea boxText = new JTextArea(7,40);
     private static LinkedList <Task> list;
-    
+    //save
     public UI() {
         setTitle("Studento uzduociu tvarkytuvas");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -199,13 +199,13 @@ public class UI extends JFrame {
                     
                     Nuskaityti.deleteTaskByPos(pos);
                     Nuskaityti.deleteTaskInFileByPos(pos);
-                    System.out.println("success");
+                    JOptionPane.showMessageDialog(addTaskPanel, "Užduotis " + pos + " sėkmingai pašalinta.", "ALERT", JOptionPane.PLAIN_MESSAGE);
 
                 } catch (NumberFormatException ex) {
-                    System.err.println("Invalid position input: " + temp);
-                }
+                    JOptionPane.showMessageDialog(addTaskPanel, "Veskite skaičių", "ALERT", JOptionPane.PLAIN_MESSAGE);
+                } 
             } else {
-                System.err.println("Position field is empty");
+                System.err.println("Pozicijos laukas tuscias");
             }
         }
         });
@@ -229,15 +229,14 @@ public class UI extends JFrame {
         public void actionPerformed(ActionEvent e) {
             String title = taskTitleFieldDel.getText();
             
-            if(Nuskaityti.deltemp > 1){
-
+            Nuskaityti.deleteTaskByTitle(title);
+            Nuskaityti.deleteTaskInFileTitle(title);
+            if(Nuskaityti.addBool == true){
+                JOptionPane.showMessageDialog(addTaskPanel, "Užduotis " + title + " sėkmingai pašalinta.", "ALERT", JOptionPane.PLAIN_MESSAGE);
             } else {
-                Nuskaityti.deleteTaskByTitle(title);
-                Nuskaityti.deleteTaskInFileTitle(title);
+                JOptionPane.showMessageDialog(addTaskPanel, "Užduoties tokiu pavadinimu nėra", "ALERT", JOptionPane.PLAIN_MESSAGE);
             }
-
             
-            System.out.println("success");
         }
         });
 
@@ -282,9 +281,9 @@ public class UI extends JFrame {
                     String additional = additionalInfoField.getText();
                     
                     Nuskaityti.addTask(posStr, title, subject, deadline, description, additional);
-                    if(Nuskaityti.addBool == false){
+                    if(Nuskaityti.addBool == true){
                         JOptionPane.showMessageDialog(addTaskPanel, "Užduotis sėkmingai pridėta.", "ALERT", JOptionPane.PLAIN_MESSAGE);
-                    } else if (Nuskaityti.addBool == true){
+                    } else if (Nuskaityti.addBool == false){
                         JOptionPane.showMessageDialog(addTaskPanel, "Pasibaigęs užduoties terminas.", "ALERT", JOptionPane.PLAIN_MESSAGE);
                     }
                     
@@ -331,7 +330,7 @@ public class UI extends JFrame {
                 }
                 
                 JScrollPane scrollPane = new JScrollPane(resultTextArea);
-  
+                
                 JOptionPane.showMessageDialog(findByTitlePanel, scrollPane, "Rastos uzduotys", JOptionPane.PLAIN_MESSAGE);
                 
             }

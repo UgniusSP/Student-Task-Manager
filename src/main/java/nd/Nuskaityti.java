@@ -28,7 +28,6 @@ public class Nuskaityti {
     private static final File file = new File("src/main/java/nd/tasks.json");
     public static String deadlineToReturn;
     public static boolean addBool = false;
-    public static int deltemp = 0;
 
     public static void main(String[] args) throws ParseException {
         deleteTaskByTitle("a");
@@ -131,8 +130,9 @@ public class Nuskaityti {
 
         if(date2.before(date1)){ //jeigu deadline pvz 2023-11-01, neleisti prideti
             taskList.add(pos, task);
-        } else {
             addBool = true;
+        } else {
+            addBool = false;
             System.out.println("Uzduoties terminas jau pasibaiges! Uzduotis neprideta.");
         }
 
@@ -146,11 +146,13 @@ public class Nuskaityti {
                 Task task = iterator.next();
                 if (title.equals(task.getTaskTitle())) {
                     iterator.remove(); 
+                    addBool = true;
                     System.out.println("\nUzduotis " + title + " sekmingai pasalinta!\n");
                     break;
                 } 
                  else {
                     System.out.println("\nBlogai ivesta uzduotis" + title + "\n");
+                    addBool = false;
                 }
             }
     }
@@ -177,8 +179,10 @@ public class Nuskaityti {
                         task.getAdditionalInfo()
                         );
                 queue.add(temp);
-                
-                } 
+                addBool = true;
+                } else {
+                    addBool = false;
+                }
             }
         wipeList(taskList);
     }
@@ -198,7 +202,10 @@ public class Nuskaityti {
                         task.getAdditionalInfo()
                         );
                 queue.add(temp);
-                } 
+                addBool = true;
+                } else{
+                    addBool = false;
+                }
             }
             
         wipeList(taskList);
